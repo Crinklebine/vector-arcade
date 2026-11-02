@@ -32,3 +32,9 @@ All games support `P` to pause, `R` to restart, and `V` to toggle sound. When a 
 - Each game is a single standalone HTML file; there is no shared JavaScript bundle.
 - High scores are stored in the browser via `localStorage`.
 - `index.html` links to the games with `?from=menu`, which enables the in-game **Menu** link and `M` shortcut.
+
+## License
+
+Copyright (C) 2026 Crinklebine.
+
+Licensed under the [GNU General Public License v3.0](LICENSE).
