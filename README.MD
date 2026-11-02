@@ -1,5 +1,7 @@
 # Vector Arcade
 
+![Vector Arcade launcher](screenshots/launcher.png)
+
 A small collection of self-contained, CRT-style vector arcade games built with plain HTML, CSS, and JavaScript. No build step or dependencies are required.
 
 ## Play
