@@ -566,28 +566,44 @@
     }
   }
 
-  function bunkerHit(x, y, radius) {
-    for (const b of bunkers) {
-      if (x < b.x - radius || x > b.x + b.w + radius || y < b.y - radius || y > b.y + b.h + radius) continue;
+  // True when a circle overlaps an axis-aligned cell rectangle.
+  function circleHitsCell(cx, cy, r, rx, ry, rw, rh) {
+    const nx = cx < rx ? rx : cx > rx + rw ? rx + rw : cx;
+    const ny = cy < ry ? ry : cy > ry + rh ? ry + rh : cy;
+    const dx = cx - nx;
+    const dy = cy - ny;
+    return dx * dx + dy * dy <= r * r;
+  }
 
-      const c0 = Math.floor((x - b.x) / BUNKER_CELL);
-      const r0 = Math.floor((y - b.y) / BUNKER_CELL);
+  function bunkerHit(x, y, radius) {
+    const blast = radius + 2;
+    for (const b of bunkers) {
+      if (x + radius < b.x || x - radius > b.x + b.w ||
+          y + radius < b.y || y - radius > b.y + b.h) continue;
+
+      // Only count cells the projectile actually touches. The old 3x3
+      // neighbourhood check could register a hit on a cell far outside the
+      // wipe radius, making bombs disappear above a shield without damage.
       let hit = false;
-      for (let r = r0 - 1; r <= r0 + 1 && !hit; r++) {
-        for (let c = c0 - 1; c <= c0 + 1; c++) {
-          if (r >= 0 && r < BUNKER_ROWS && c >= 0 && c < BUNKER_COLS &&
-              b.cells[r * BUNKER_COLS + c]) { hit = true; break; }
+      for (let r = 0; r < BUNKER_ROWS && !hit; r++) {
+        for (let c = 0; c < BUNKER_COLS; c++) {
+          if (!b.cells[r * BUNKER_COLS + c]) continue;
+          if (circleHitsCell(x, y, radius,
+              b.x + c * BUNKER_CELL, b.y + r * BUNKER_CELL, BUNKER_CELL, BUNKER_CELL)) {
+            hit = true;
+            break;
+          }
         }
       }
       if (!hit) continue;
 
-      const rad = radius + 2;
+      // The blast is always larger than the collision circle, so a hit is
+      // guaranteed to leave visible damage.
       for (let r = 0; r < BUNKER_ROWS; r++) {
         for (let c = 0; c < BUNKER_COLS; c++) {
           if (!b.cells[r * BUNKER_COLS + c]) continue;
-          const px = b.x + (c + 0.5) * BUNKER_CELL;
-          const py = b.y + (r + 0.5) * BUNKER_CELL;
-          if ((px - x) * (px - x) + (py - y) * (py - y) < rad * rad) {
+          if (circleHitsCell(x, y, blast,
+              b.x + c * BUNKER_CELL, b.y + r * BUNKER_CELL, BUNKER_CELL, BUNKER_CELL)) {
             b.cells[r * BUNKER_COLS + c] = 0;
           }
         }
@@ -1162,12 +1178,28 @@
     ctx.fillStyle = C.white;
     for (const b of playerBullets) ctx.fillRect(b.x - 1, b.y - 8, 2, 16);
 
+    // Invader bombs are animated zigzags, alternating direction each tick
+    // like the arcade original.
     ctx.shadowColor = C.red;
     ctx.shadowBlur = 12;
-    ctx.fillStyle = C.red;
-    for (const b of enemyBullets) ctx.fillRect(b.x - 2.5, b.y - 7, 5, 14);
-    ctx.fillStyle = '#ffc9ce';
-    for (const b of enemyBullets) ctx.fillRect(b.x - 1, b.y - 5, 2, 10);
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    const bombFlip = Math.floor(game.time * 10) % 2 === 0 ? 1 : -1;
+    for (const b of enemyBullets) {
+      const top = b.y - 11;
+      ctx.beginPath();
+      ctx.moveTo(b.x - 4 * bombFlip, top);
+      ctx.lineTo(b.x + 4 * bombFlip, top + 5.5);
+      ctx.lineTo(b.x - 4 * bombFlip, top + 11);
+      ctx.lineTo(b.x + 4 * bombFlip, top + 16.5);
+      ctx.lineTo(b.x, top + 22);
+      ctx.strokeStyle = C.red;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.strokeStyle = '#ffd7db';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
