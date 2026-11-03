@@ -1208,7 +1208,8 @@
   }
 
   function actionActive(name) {
-    for (const v of touchActions.values()) if (v === name) return true;
+    const touchName = name === 'forward' ? 'fwd' : name === 'back' ? 'rev' : name;
+    for (const v of touchActions.values()) if (v === touchName) return true;
     if (name === 'forward') return keys.has('w') || keys.has('arrowup');
     if (name === 'back') return keys.has('s') || keys.has('arrowdown');
     if (name === 'left') return keys.has('a') || keys.has('arrowleft');
