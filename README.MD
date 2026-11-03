@@ -1,12 +1,16 @@
 # Vector Arcade
 
+**▶ [Play Vector Arcade](https://crinklebine.github.io/vector-arcade/)**
+
 ![Vector Arcade launcher](screenshots/launcher.png)
 
 A small collection of self-contained, CRT-style vector arcade games built with plain HTML, CSS, and JavaScript. No build step or dependencies are required.
 
 ## Play
 
-Open `index.html` in a browser, or serve the folder locally:
+**Play online: [crinklebine.github.io/vector-arcade](https://crinklebine.github.io/vector-arcade/)**
+
+To run locally, open `index.html` in a browser or serve the folder:
 
 ```sh
 python3 -m http.server 8000
