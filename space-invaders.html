@@ -283,7 +283,7 @@
     '..XXX..XX..XXX..',
     '...X........X...',
   ];
-  const UFO_DEFLECT_CHANCE = 0.35;
+  const UFO_POINT_VALUES = [50, 100, 150, 300];
   const PLAYER_PATTERN = [
     '......X......',
     '.....XXX.....',
@@ -947,12 +947,15 @@
     game.ufoTimer -= dt;
     if (game.ufoTimer <= 0) {
       const fromLeft = Math.random() < 0.5;
+      // Five equally likely outcomes: 50, 100, 150, 300, or deflect.
+      const roll = Math.floor(Math.random() * 5);
+      const deflects = roll === 4;
       ufo = {
         x: fromLeft ? -50 : W + 50,
         y: 118,
         vx: (fromLeft ? 1 : -1) * (110 + game.level * 8),
-        points: [50, 100, 150, 300][Math.floor(Math.random() * 4)],
-        deflects: Math.random() < UFO_DEFLECT_CHANCE,
+        points: deflects ? 1000 : UFO_POINT_VALUES[roll],
+        deflects: deflects,
         deflected: false,
         deflectFlash: 0,
       };
