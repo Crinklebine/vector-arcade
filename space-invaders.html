@@ -283,6 +283,7 @@
     '..XXX..XX..XXX..',
     '...X........X...',
   ];
+  const UFO_DEFLECT_CHANCE = 0.35;
   const PLAYER_PATTERN = [
     '......X......',
     '.....XXX.....',
@@ -951,6 +952,7 @@
         y: 118,
         vx: (fromLeft ? 1 : -1) * (110 + game.level * 8),
         points: [50, 100, 150, 300][Math.floor(Math.random() * 4)],
+        deflects: Math.random() < UFO_DEFLECT_CHANCE,
         deflected: false,
         deflectFlash: 0,
       };
@@ -962,9 +964,9 @@
   function hitUfo() {
     if (!ufo) return;
 
-    // First hit on a UFO is deflected. It survives, raises its shield, and
-    // is worth 1000 points on the next hit during this same pass.
-    if (!ufo.deflected) {
+    // Only some UFOs are shield carriers. Their first hit is deflected; the
+    // second hit is worth 1000 points instead of the normal random value.
+    if (ufo.deflects && !ufo.deflected) {
       ufo.deflected = true;
       ufo.deflectFlash = 0.55;
       addPopup('DEFLECT', ufo.x, ufo.y - 20, C.cyan);
@@ -977,8 +979,9 @@
       return;
     }
 
-    addScore(1000);
-    addPopup('+1000', ufo.x, ufo.y - 18, C.magenta);
+    const pts = ufo.deflected ? 1000 : ufo.points;
+    addScore(pts);
+    addPopup('+' + pts, ufo.x, ufo.y - 18, C.magenta);
     burst(ufo.x, ufo.y, C.magenta, 32, 260, 0.8);
     burst(ufo.x, ufo.y, C.white, 12, 170, 0.5);
     noise(0.25, 0.06, 500);
