@@ -543,6 +543,29 @@
     }
   }
 
+  // Invaders grind through the shields as they descend, just like the arcade
+  // original: any bunker cell under an invader's footprint is erased.
+  function clearBunkersUnderInvader(inv) {
+    const halfW = 18;
+    const halfH = 12;
+    const left = inv.x - halfW;
+    const right = inv.x + halfW;
+    const top = inv.y - halfH;
+    const bottom = inv.y + halfH;
+    for (const b of bunkers) {
+      if (right < b.x || left > b.x + b.w || bottom < b.y || top > b.y + b.h) continue;
+      const c0 = Math.max(0, Math.floor((left - b.x) / BUNKER_CELL));
+      const c1 = Math.min(BUNKER_COLS - 1, Math.floor((right - b.x) / BUNKER_CELL));
+      const r0 = Math.max(0, Math.floor((top - b.y) / BUNKER_CELL));
+      const r1 = Math.min(BUNKER_ROWS - 1, Math.floor((bottom - b.y) / BUNKER_CELL));
+      for (let r = r0; r <= r1; r++) {
+        for (let c = c0; c <= c1; c++) {
+          b.cells[r * BUNKER_COLS + c] = 0;
+        }
+      }
+    }
+  }
+
   function bunkerHit(x, y, radius) {
     for (const b of bunkers) {
       if (x < b.x - radius || x > b.x + b.w + radius || y < b.y - radius || y > b.y + b.h + radius) continue;
@@ -787,6 +810,7 @@
     for (const inv of alive) {
       if (descend) inv.y += drop;
       else inv.x += step * game.dir;
+      clearBunkersUnderInvader(inv);
     }
 
     game.frame = 1 - game.frame;
