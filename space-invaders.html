@@ -146,8 +146,8 @@
   @media (pointer: coarse) and (orientation: landscape) {
     body.has-menu #stage { width: min(72vw, calc((100svh - 151px) * 0.8888)); }
   }
-  /* Secret build-info screen: Backquote on the start screen, or five taps
-     in the top-right corner. Never available during play. */
+  /* Secret build-info screen: I (or Backquote) on the start screen, or five
+     taps in the top-right corner. Never available during play. */
   .secret {
     position: fixed;
     inset: 0;
@@ -235,7 +235,7 @@
       <div><dt>RES</dt><dd id="secret-screen">&mdash;</dd></div>
       <div><dt>HIGH SCORE</dt><dd id="secret-hi">000000</dd></div>
     </dl>
-    <p class="secret-close">PRESS ` OR TAP TO CLOSE</p>
+    <p class="secret-close">PRESS I OR TAP TO CLOSE</p>
   </div>
 </div>
 
@@ -1569,7 +1569,8 @@
   });
 
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'Backquote') {
+    if ((e.code === 'KeyI' || e.code === 'Backquote') &&
+        !e.metaKey && !e.ctrlKey && !e.altKey) {
       e.preventDefault();
       if (!e.repeat) toggleSecret();
       return;
