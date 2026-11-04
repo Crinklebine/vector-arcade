@@ -172,8 +172,8 @@
     #touch .cluster { flex-direction: column; }
     #touch button { height: auto; min-height: 46px; }
   }
-  /* Secret build-info screen: I (or Backquote) on the start screen, or five
-     taps in the top-right corner. Never available during play. */
+  /* Secret build-info screen: I on the start screen, or five taps in the
+     top-right corner. Never available during play. */
   .secret {
     position: fixed;
     inset: 0;
@@ -1642,8 +1642,7 @@
   });
 
   window.addEventListener('keydown', (e) => {
-    if ((e.code === 'KeyI' || e.code === 'Backquote') &&
-        !e.metaKey && !e.ctrlKey && !e.altKey) {
+    if (e.code === 'KeyI' && !e.metaKey && !e.ctrlKey && !e.altKey) {
       e.preventDefault();
       if (!e.repeat) toggleSecret();
       return;

@@ -735,8 +735,8 @@
     .boot-row { opacity: 1; }
     .crt-roll { display: none; }
   }
-  /* Secret build-info screen: I (or Backquote) on the start screen, or five
-     taps in the top-right corner. Never available during play. */
+  /* Secret build-info screen: I on the start screen, or five taps in the
+     top-right corner. Never available during play. */
   .secret {
     position: fixed;
     inset: 0;
@@ -1181,8 +1181,7 @@
       finishBoot(true);
       return;
     }
-    if ((e.code === 'KeyI' || e.code === 'Backquote') &&
-        !e.metaKey && !e.ctrlKey && !e.altKey) {
+    if (e.code === 'KeyI' && !e.metaKey && !e.ctrlKey && !e.altKey) {
       e.preventDefault();
       if (!e.repeat) toggleSecret();
       return;
