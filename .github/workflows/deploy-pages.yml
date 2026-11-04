@@ -30,6 +30,14 @@ jobs:
           mkdir -p _site
           cp *.html *.png *.ico *.svg *.webmanifest _site/
 
+      - name: Stamp build info
+        run: |
+          short="${GITHUB_SHA::7}"
+          built="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          sed -i -E \
+            "s|(name=\"build\" content=\")[^\"]*(\")|\1${short}\2|g; s|(name=\"built-at\" content=\")[^\"]*(\")|\1${built}\2|g" \
+            _site/*.html
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:

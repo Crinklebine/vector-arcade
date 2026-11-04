@@ -11,6 +11,8 @@
 <link rel="mask-icon" href="safari-pinned-tab.svg" color="#35ff8c">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#020805">
+<meta name="build" content="__BUILD__">
+<meta name="built-at" content="__BUILT_AT__">
 <title>Vector Arcade</title>
 <script>
   try {
@@ -733,6 +735,66 @@
     .boot-row { opacity: 1; }
     .crt-roll { display: none; }
   }
+  /* Secret build-info screen: Backquote on the start screen, or five taps
+     in the top-right corner. Never available during play. */
+  .secret {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(1, 6, 4, 0.94);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color: #a8ffc4;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .secret[hidden] { display: none; }
+  .secret-panel {
+    width: min(540px, 100%);
+    padding: 26px 28px;
+    border: 1px solid rgba(120, 255, 170, 0.32);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(6, 20, 12, 0.96), rgba(2, 9, 5, 0.96));
+    box-shadow: 0 0 60px rgba(60, 255, 140, 0.12), inset 0 0 40px rgba(0, 0, 0, 0.6);
+  }
+  .secret-title {
+    margin: 0 0 18px;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    color: #e0ffee;
+  }
+  .secret-title span { color: #4d7a5d; }
+  .secret dl { display: grid; gap: 9px; margin: 0; }
+  .secret dl > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 18px;
+  }
+  .secret dt {
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    color: #4d7a5d;
+    white-space: nowrap;
+  }
+  .secret dd {
+    margin: 0;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: #d8ffe8;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+  .secret-close {
+    margin: 20px 0 0;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    color: #4d7a5d;
+    text-align: center;
+  }
 </style>
 <noscript><style>#boot { display: none !important; }</style></noscript>
 <script
@@ -823,6 +885,20 @@
     <p class="credit">A VECTOR ARCADE TRIBUTE</p>
   </footer>
 </main>
+
+<div id="secret" class="secret" hidden role="dialog" aria-modal="true" aria-label="System information">
+  <div class="secret-panel">
+    <p class="secret-title">VECTOR ARCADE <span>// SYSTEM INFO</span></p>
+    <dl>
+      <div><dt>PAGE</dt><dd>index.html</dd></div>
+      <div><dt>BUILD</dt><dd id="secret-build">dev</dd></div>
+      <div><dt>BUILT</dt><dd id="secret-built">local build</dd></div>
+      <div><dt>RES</dt><dd id="secret-screen">&mdash;</dd></div>
+      <div><dt>ARCADE BEST</dt><dd id="secret-hi">000000</dd></div>
+    </dl>
+    <p class="secret-close">PRESS ` OR TAP TO CLOSE</p>
+  </div>
+</div>
 
 <div id="boot" role="status" aria-live="polite" aria-label="Loading arcade system">
   <div class="boot-inner">
@@ -1048,11 +1124,71 @@
     window.setTimeout(() => { window.location.href = href; }, reduceMotion ? 40 : 300);
   }
 
+  // ------------------------------------------------------------- secret info
+  const secretEl = document.getElementById('secret');
+  const secretBuildEl = document.getElementById('secret-build');
+  const secretBuiltEl = document.getElementById('secret-built');
+  const secretScreenEl = document.getElementById('secret-screen');
+  const secretHiEl = document.getElementById('secret-hi');
+  let secretOpen = false;
+  let secretTaps = [];
+
+  function openSecret() {
+    try {
+      const rawBuild = (document.querySelector('meta[name="build"]') || {}).content || '';
+      const rawBuilt = (document.querySelector('meta[name="built-at"]') || {}).content || '';
+      secretBuildEl.textContent = rawBuild && rawBuild !== '__BUILD__' ? rawBuild : 'dev';
+      secretBuiltEl.textContent = rawBuilt && rawBuilt !== '__BUILT_AT__'
+        ? rawBuilt.replace('T', ' ').replace('Z', ' UTC')
+        : 'local build';
+      secretHiEl.textContent = String(parseInt(topScoreEl.textContent, 10) || 0).padStart(6, '0');
+      secretScreenEl.textContent = window.innerWidth + ' x ' + window.innerHeight + ' @ ' + (window.devicePixelRatio || 1) + 'x';
+    } catch (e) { /* never let the info screen break the hub */ }
+    secretOpen = true;
+    secretEl.hidden = false;
+  }
+
+  function closeSecret() {
+    secretOpen = false;
+    secretEl.hidden = true;
+  }
+
+  function toggleSecret() {
+    if (secretOpen) closeSecret();
+    else openSecret();
+  }
+
+  document.addEventListener('pointerdown', (e) => {
+    if (secretOpen) { closeSecret(); return; }
+    if (!booted) return;
+    if (e.clientX < window.innerWidth - 72 || e.clientY > 72) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const now = performance.now();
+    secretTaps = secretTaps.filter((t) => now - t < 2500);
+    secretTaps.push(now);
+    if (secretTaps.length >= 5) { secretTaps = []; openSecret(); }
+  }, true);
+  secretEl.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    closeSecret();
+  });
+
   window.addEventListener('keydown', (e) => {
     if (!booted) {
       e.preventDefault();
       ensureAudio();
       finishBoot(true);
+      return;
+    }
+    if (e.code === 'Backquote') {
+      e.preventDefault();
+      if (!e.repeat) toggleSecret();
+      return;
+    }
+    if (secretOpen) {
+      e.preventDefault();
+      if (!e.repeat && (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ')) closeSecret();
       return;
     }
     const key = e.key;
